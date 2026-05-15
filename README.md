@@ -12,12 +12,7 @@ Uptime Kuma → POST /kuma-webhook → tail ConanSandbox.log → Claude → Disc
 ## Setup
 
 1. Clone this repo onto the box hosting the Conan server (e.g. `WINTOAD01`).
-2. Install Python 3.11+ and create a venv:
-   ```powershell
-   py -3.11 -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
+2. Install Python 3.11+.
 3. Copy `.env.example` to `.env` and fill in your values:
    ```
    copy .env.example .env
@@ -27,10 +22,20 @@ Uptime Kuma → POST /kuma-webhook → tail ConanSandbox.log → Claude → Disc
    Optional overrides: `CONAN_LOG_PATH`, `LOG_TAIL_LINES`, `LISTENER_PORT`,
    `COOLDOWN_SECONDS`, `ANTHROPIC_MODEL`, `POST_RECOVERY_MESSAGES`.
 4. Run it:
+   ```
+   run.bat
+   ```
+   The batch file creates `.venv` if it's missing, installs/updates
+   requirements, then launches `diagnostics.py`. The Flask listener binds to
+   `0.0.0.0:5555` by default.
+
+   To run manually instead:
    ```powershell
+   py -3.11 -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
    python diagnostics.py
    ```
-   The Flask listener binds to `0.0.0.0:5555` by default.
 
 ## Uptime Kuma configuration
 
@@ -80,10 +85,11 @@ on the diagnostic service itself.
 
 ## Running as a Windows service (optional)
 
-The simplest path is [nssm](https://nssm.cc/):
+The simplest path is [nssm](https://nssm.cc/). Run `run.bat` once first so
+`.venv` exists, then:
 
 ```powershell
-nssm install ConanDiagnostics "C:\path\to\.venv\Scripts\python.exe" "C:\path\to\diagnostics.py"
+nssm install ConanDiagnostics "C:\path\to\conan-server-diagnostics\.venv\Scripts\python.exe" "C:\path\to\conan-server-diagnostics\diagnostics.py"
 nssm set ConanDiagnostics AppDirectory "C:\path\to\conan-server-diagnostics"
 nssm set ConanDiagnostics AppStdout    "C:\path\to\conan-server-diagnostics\service.out.log"
 nssm set ConanDiagnostics AppStderr    "C:\path\to\conan-server-diagnostics\service.err.log"
