@@ -133,8 +133,11 @@ Invoke-RestMethod -Method Post -Uri http://localhost:5555/kuma-webhook `
 ### 2. Use Kuma's built-in test button
 
 In Kuma, go to *Settings → Notifications → (your webhook entry) → Test*.
-Kuma fires a real-shape payload at your endpoint — best end-to-end check
-that the Kuma → service → Discord chain works.
+Kuma fires a synthetic payload (`heartbeat: null, monitor: null,
+msg: <notification name>`) at your endpoint. The service recognizes this
+and posts a blue "Kuma webhook test" embed to Discord without invoking
+Claude — so the Test button gives you visible end-to-end confirmation
+that Kuma → service → Discord is wired up.
 
 ### Things to know while testing
 
