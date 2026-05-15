@@ -41,6 +41,7 @@ HOSTNAME = os.getenv("COMPUTERNAME") or socket.gethostname() or "WINTOAD01"
 
 COLOR_DOWN = 16711680  # red
 COLOR_RECOVERY = 65280  # green
+COLOR_TEST = 3447003  # blue
 
 DISCORD_EMBED_DESC_LIMIT = 4096
 DIAGNOSIS_CHAR_LIMIT = 1800  # leaves headroom under the 4096 cap
@@ -300,12 +301,36 @@ def _extract_status(payload: dict[str, Any]) -> int | None:
     return None
 
 
+def _is_kuma_test_payload(payload: dict[str, Any]) -> bool:
+    """Kuma's notification "Test" button sends heartbeat=null and monitor=null."""
+    if not isinstance(payload, dict):
+        return False
+    has_kuma_shape = "heartbeat" in payload and "monitor" in payload
+    return has_kuma_shape and payload.get("heartbeat") is None and payload.get("monitor") is None
+
+
 @app.post("/kuma-webhook")
 def kuma_webhook():
     try:
         payload = request.get_json(silent=True) or {}
     except Exception:  # noqa: BLE001
         payload = {}
+
+    if _is_kuma_test_payload(payload):
+        msg = str(payload.get("msg") or "Test")
+        log.info("Kuma test webhook received: %s", msg)
+        _record_event("test")
+        post_discord_embed(
+            title=f"🔵 {HOSTNAME} Kuma webhook test",
+            description=(
+                f"Received Kuma notification test: `{msg}`.\n\n"
+                "End-to-end chain is wired up. Real outages will trigger "
+                "the full diagnostic pipeline."
+            ),
+            color=COLOR_TEST,
+            footer="Test event (no Claude call)",
+        )
+        return jsonify({"ok": True, "action": "test_acknowledged"}), 200
 
     status = _extract_status(payload)
     log.info("Webhook received: status=%s payload_keys=%s", status, list(payload.keys()))
