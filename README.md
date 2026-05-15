@@ -99,6 +99,60 @@ nssm start ConanDiagnostics
 `.env` is read from the working directory, so make sure `AppDirectory`
 points at the repo root.
 
+## Manual testing
+
+You don't need the Conan server to actually be down. Easiest options:
+
+### 1. Curl the webhook directly
+
+PowerShell with `curl.exe`:
+
+```powershell
+# Simulate "down" — triggers full pipeline (log tail → Claude → Discord)
+curl.exe -X POST http://localhost:5555/kuma-webhook `
+  -H "Content-Type: application/json" `
+  -d '{\"heartbeat\":{\"status\":0},\"monitor\":{\"name\":\"Manual test\"}}'
+
+# Simulate "up" — green recovery embed only, no Claude call
+curl.exe -X POST http://localhost:5555/kuma-webhook `
+  -H "Content-Type: application/json" `
+  -d '{\"heartbeat\":{\"status\":1}}'
+
+# Health check
+curl.exe http://localhost:5555/health
+```
+
+Or pure PowerShell (no quoting headaches):
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:5555/kuma-webhook `
+  -ContentType 'application/json' `
+  -Body (@{ heartbeat = @{ status = 0 }; monitor = @{ name = 'Manual test' } } | ConvertTo-Json)
+```
+
+### 2. Use Kuma's built-in test button
+
+In Kuma, go to *Settings → Notifications → (your webhook entry) → Test*.
+Kuma fires a real-shape payload at your endpoint — best end-to-end check
+that the Kuma → service → Discord chain works.
+
+### Things to know while testing
+
+- **Cooldown will bite you.** After one `status=0` test, the next
+  `COOLDOWN_SECONDS` (default 300) of `status=0` requests return
+  `{"action":"skipped_cooldown"}` and do nothing visible. Either wait, set
+  `COOLDOWN_SECONDS=5` in `.env` for testing, or restart the service to
+  reset the in-memory counter.
+- **Force the no-log path.** Point `CONAN_LOG_PATH` at a path that doesn't
+  exist and re-trigger — you should get a Discord embed reporting the
+  read error rather than a crash.
+- **Force the no-Claude path.** Temporarily blank out `ANTHROPIC_API_KEY`
+  in `.env` and re-trigger — you should get the raw log tail in Discord
+  with a fallback notice.
+- **Watch `diagnostics.log`** (or the console) in another window while
+  testing. Every webhook logs `Webhook received: status=...` and the
+  resulting action.
+
 ## Troubleshooting
 
 - **Kuma webhook always returns `unrecognized_payload`**: Kuma's payload
