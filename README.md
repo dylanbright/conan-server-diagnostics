@@ -166,5 +166,5 @@ that Kuma → service → Discord is wired up.
 - **No Discord message on down**: Check `diagnostics.log` for either a
   cooldown skip line or a Discord HTTP error.
 - **Claude returns garbage / refuses**: The default model in `.env.example`
-  is `claude-sonnet-4-20250514`. Newer Claude models can be set via
-  `ANTHROPIC_MODEL` if you want to upgrade.
+  is `claude-sonnet-4-6`. Other Claude models can be set via
+  `ANTHROPIC_MODEL` if you want to swap.

@@ -34,7 +34,7 @@ CONAN_LOG_PATH = os.getenv("CONAN_LOG_PATH", r"C:\ConanSaved\Logs\ConanSandbox.l
 LOG_TAIL_LINES = int(os.getenv("LOG_TAIL_LINES", "50"))
 LISTENER_PORT = int(os.getenv("LISTENER_PORT", "5555"))
 COOLDOWN_SECONDS = int(os.getenv("COOLDOWN_SECONDS", "300"))
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 POST_RECOVERY_MESSAGES = os.getenv("POST_RECOVERY_MESSAGES", "1") == "1"
 
 HOSTNAME = os.getenv("COMPUTERNAME") or socket.gethostname() or "WINTOAD01"
